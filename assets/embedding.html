@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picolloscope embedding parent</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #1f2933;
+        background: #f5f7fa;
+      }
+      .host-shell {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr) 260px;
+        flex: 1;
+        min-height: 0;
+      }
+      .left-panel,
+      .right-panel {
+        min-height: 0;
+        overflow: auto;
+        padding: 14px;
+        background: #ffffff;
+      }
+      .left-panel {
+        border-right: 1px solid #d7dee8;
+      }
+      .right-panel {
+        border-left: 1px solid #d7dee8;
+      }
+      .left-panel h2,
+      .right-panel h2,
+      .content h1 {
+        margin: 0 0 10px;
+        font-size: 14px;
+      }
+      .left-panel button {
+        display: block;
+        width: 100%;
+        margin-bottom: 6px;
+        color: #1f2933;
+        background: #edf2f7;
+        border-color: #d7dee8;
+        text-align: left;
+      }
+      .left-panel button.active {
+        color: #ffffff;
+        background: #2f6f9f;
+        border-color: #2f6f9f;
+      }
+      .content {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        overflow: auto;
+        padding: 14px;
+      }
+      .content p,
+      .right-panel p {
+        margin: 0 0 10px;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      form {
+        display: grid;
+        grid-template-columns: minmax(240px, 2fr) minmax(240px, 2fr) minmax(180px, 1fr) repeat(4, max-content);
+        gap: 8px;
+        align-items: end;
+        padding: 10px;
+        background: #ffffff;
+        border-bottom: 1px solid #d7dee8;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      input,
+      select,
+      button {
+        height: 30px;
+        font: inherit;
+      }
+      input,
+      select {
+        border: 1px solid #b8c2cc;
+        padding: 4px 6px;
+        background: #ffffff;
+      }
+      button {
+        border: 1px solid #2f6f9f;
+        padding: 0 12px;
+        color: #ffffff;
+        background: #2f6f9f;
+        cursor: pointer;
+      }
+      .checkbox {
+        flex-direction: row;
+        align-items: center;
+        height: 30px;
+      }
+      .checkbox input {
+        width: 16px;
+        height: 16px;
+      }
+      .current-url {
+        min-height: 28px;
+        padding: 6px 10px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: ui-monospace, "Consolas", monospace;
+        font-size: 11px;
+        line-height: 16px;
+        background: #e8edf3;
+        border-bottom: 1px solid #d7dee8;
+      }
+      .metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .metric {
+        padding: 10px;
+        background: #edf2f7;
+        border: 1px solid #d7dee8;
+      }
+      .metric strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 12px;
+      }
+      .metric span {
+        font-size: 18px;
+        font-weight: 700;
+      }
+      @media (max-width: 980px) {
+        .host-shell {
+          grid-template-columns: 160px minmax(0, 1fr);
+        }
+        .right-panel {
+          display: none;
+        }
+        form {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 640px) {
+        .host-shell {
+          grid-template-columns: 1fr;
+        }
+        .left-panel {
+          display: none;
+        }
+        form {
+          grid-template-columns: 1fr;
+        }
+      }
+      iframe {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <form id="controls">
+      <label>
+        Profile URL
+        <input id="profileURL" name="profileURL" value="sample.json">
+      </label>
+      <label>
+        Base profile URL
+        <input id="baseProfileURL" name="baseProfileURL" placeholder="Optional">
+      </label>
+      <label>
+        Title
+        <input id="title" name="title" value="Embedded profile">
+      </label>
+      <label>
+        View
+        <select id="view" name="view">
+          <option value="time-ordered">Time Order</option>
+          <option value="left-heavy">Left Heavy</option>
+          <option value="sandwich">Sandwich</option>
+        </select>
+      </label>
+      <label>
+        Theme
+        <select id="theme" name="theme">
+          <option value="system">System</option>
+          <option value="light" selected>Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </label>
+      <label class="checkbox">
+        <input id="embedded" name="embedded" type="checkbox" checked>
+        Embedded
+      </label>
+      <button type="submit">Reload</button>
+    </form>
+    <div class="host-shell">
+      <aside class="left-panel">
+        <h2>Workspace</h2>
+        <button class="active" type="button">Profiler</button>
+        <button type="button">Services</button>
+        <button type="button">Deployments</button>
+        <button type="button">Logs</button>
+        <button type="button">Settings</button>
+      </aside>
+      <main class="content">
+        <h1>Embedded profiler panel</h1>
+        <p>
+          This page simulates a host application with navigation, side panels, and surrounding content. The iframe should stay inside the
+          area allocated by the host layout.
+        </p>
+        <p>
+          Resize the browser or drag the lower edge of the profiler area to check that the embedded app does not create unexpected page
+          scrollbars or assume ownership of the parent viewport.
+        </p>
+        <div id="currentURL" class="current-url"></div>
+        <div
+          data-picolloscope-host
+          style="box-sizing: border-box; height: min(620px, 58vh); min-height: 320px; margin: 10px 0; position: relative; background: #ffffff; border: 1px solid #b8c2cc; overflow: hidden;"
+        >
+          <div data-picolloscope-backdrop style="display: none;"></div>
+          <button
+            type="button"
+            data-picolloscope-maximize
+            title="Maximize view"
+            style="position: absolute; top: 0px; right: 0px; z-index: 2; height: 20px; width: 20px; border: 0; padding: 1px; margin: 0; color: #ffffff; background: transparent; font: inherit; cursor: pointer;"
+          >
+            #
+          </button>
+          <iframe id="appFrame" title="Picolloscope embedded viewer" style="position: relative; z-index: 1;"></iframe>
+          <script>
+            
+            (() => {
+              const script = document.currentScript
+              const host = script.closest('[data-picolloscope-host]')
+              const button = host.querySelector('[data-picolloscope-maximize]')
+              const backdrop = host.querySelector('[data-picolloscope-backdrop]')
+
+              const normalStyle = {
+                position: host.style.position,
+                inset: host.style.inset,
+                zIndex: host.style.zIndex,
+                height: host.style.height,
+                minHeight: host.style.minHeight,
+                margin: host.style.margin,
+                border: host.style.border,
+              }
+
+              const maximizeSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-expand-icon lucide-expand"><path d="m15 15 6 6"/><path d="m15 9 6-6"/><path d="M21 16v5h-5"/><path d="M21 8V3h-5"/><path d="M3 16v5h5"/><path d="m3 21 6-6"/><path d="M3 8V3h5"/><path d="M9 9 3 3"/></svg>'
+              const minimizeSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shrink-icon lucide-shrink"><path d="m15 15 6 6m-6-6v4.8m0-4.8h4.8"/><path d="M9 19.8V15m0 0H4.2M9 15l-6 6"/><path d="M15 4.2V9m0 0h4.8M15 9l6-6"/><path d="M9 4.2V9m0 0H4.2M9 9 3 3"/></svg>'
+
+              function setMaximized(maximize) {
+                if (!maximize) {
+                  host.dataset.picolloscopeMaximized = 'false'
+                  host.style.position = normalStyle.position
+                  host.style.inset = normalStyle.inset
+                  host.style.zIndex = normalStyle.zIndex
+                  host.style.height = normalStyle.height
+                  host.style.minHeight = normalStyle.minHeight
+                  host.style.margin = normalStyle.margin
+                  host.style.border = normalStyle.border
+                  backdrop.style.display = 'none'
+                  button.innerHTML = maximizeSvg
+                  button.title = 'Maximize view'
+                } else {
+                  host.dataset.picolloscopeMaximized = 'true'
+                  host.style.position = 'fixed'
+                  host.style.inset = '5px'
+                  host.style.zIndex = '9999'
+                  host.style.height = 'auto'
+                  host.style.minHeight = '0'
+                  host.style.margin = '0'
+                  host.style.border = '1px solid #ffffff'
+                  backdrop.style.display = 'block'
+                  backdrop.style.position = 'fixed'
+                  backdrop.style.inset = '-5px'
+                  backdrop.style.background = 'rgba(0, 0, 0, 0.45)'
+                  backdrop.style.zIndex = '0'
+                  button.innerHTML = minimizeSvg
+                  button.title = 'Minimize view'
+                }
+              }
+
+              button.addEventListener('click', () => {
+                setMaximized(host.dataset.picolloscopeMaximized !== 'true')
+              })
+              backdrop.addEventListener('click', () => {
+                setMaximized(false)
+              })
+              window.addEventListener('keydown', event => {
+                if (event.key === 'Escape') {
+                  setMaximized(false)
+                }
+              })
+              
+              host.dataset.picolloscopeMaximized = 'false'
+              setMaximized(false)
+
+            })()
+          </script>
+        </div>
+        <p>
+          Content after the iframe remains visible in the normal document flow. This helps verify that the embedded app behaves like a
+          component rather than a full-page application.
+        </p>
+        <div class="metrics">
+          <div class="metric">
+            <strong>Requests</strong>
+            <span>12.4k</span>
+          </div>
+          <div class="metric">
+            <strong>p95 latency</strong>
+            <span>184ms</span>
+          </div>
+        </div>
+      </main>
+      <aside class="right-panel">
+        <h2>Run details</h2>
+        <p>Environment: staging</p>
+        <p>Service: checkout-api</p>
+        <p>Build: 2026.06.17</p>
+        <p>Owner: performance team</p>
+      </aside>
+    </div>
+    <script>
+      const controls = document.getElementById('controls')
+      const frame = document.getElementById('appFrame')
+      const currentURL = document.getElementById('currentURL')
+
+      function updateFrame() {
+        const url = new URL('index.html', window.location.href)
+        const profileURL = controls.profileURL.value.trim()
+        const baseProfileURL = controls.baseProfileURL.value.trim()
+        const title = controls.title.value.trim()
+
+        if (profileURL) url.searchParams.set('profileURL', profileURL)
+        if (baseProfileURL) url.searchParams.set('baseProfileURL', baseProfileURL)
+        if (title) url.searchParams.set('title', title)
+        url.searchParams.set('view', controls.view.value)
+        url.searchParams.set('theme', controls.theme.value)
+        if (controls.embedded.checked) url.searchParams.set('embedded', '')
+
+        frame.src = url.toString()
+        currentURL.textContent = url.toString()
+      }
+
+      controls.addEventListener('submit', event => {
+        event.preventDefault()
+        updateFrame()
+      })
+      updateFrame()
+    </script>
+  </body>
+</html>

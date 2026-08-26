@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+
+    "jsx": "react",
+    "jsxFactory": "h",
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "skipLibCheck": true,
+    "types": ["node", "jest"],
+
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+
+    "isolatedModules": true,
+    "noEmit": true
+  },
+  "include": ["src", "scripts"],
+  "exclude": ["node_modules"]
+}

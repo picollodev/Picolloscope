@@ -1,0 +1,16 @@
+{
+  "$schema": "https://picollo.dev/picolloscope/input-format-schema.json",
+  "metadata": {
+    "frames": [{"name": "A"}]
+  },
+  "profiles": [
+    {
+      "type": "evented",
+      "name": "p1",
+      "unit": "none",
+      "startValue": 0,
+      "endValue": 100,
+      "events": [{"type": "O", "frame": 0, "at": 0}]
+    }
+  ]
+}

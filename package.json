@@ -1,0 +1,74 @@
+{
+  "name": "picolloscope",
+  "version": "0.1.28",
+  "private": true,
+  "description": "",
+  "repository": "picollodev/picolloscope",
+  "main": "index.js",
+  "scripts": {
+    "build": "./scripts/prepack.sh --outdir \"$(pwd)/dist/release\" --protocol file",
+    "lint": "eslint 'src/**/*.ts' 'src/**/*.tsx'",
+    "jest": "jest --runInBand",
+    "coverage": "npm run jest -- --coverage",
+    "typecheck": "tsc --noEmit",
+    "test": "./scripts/ci.sh",
+    "serve": "tsx scripts/dev-server.ts"
+  },
+  "files": [
+    "bin/cli.mjs",
+    "dist/release/**",
+    "!*.map"
+  ],
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/compat": "2.1.0",
+    "@types/jest": "30.0.0",
+    "@types/node": "25.9.3",
+    "@typescript-eslint/eslint-plugin": "^8.61.1",
+    "@typescript-eslint/parser": "^8.61.1",
+    "aphrodite": "2.4.0",
+    "esbuild": "^0.28.1",
+    "esbuild-jest": "^0.5.0",
+    "eslint": "10.5.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "30.4.1",
+    "jsverify": "0.8.4",
+    "preact": "10.29.2",
+    "ts-jest": "29.4.11",
+    "tsx": "^4.22.4",
+    "typescript": "6.0.3",
+    "typescript-json-schema": "0.67.4",
+    "uint8array-json-parser": "0.0.2"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest",
+      "^.+\\.js$": "<rootDir>/scripts/esbuild-jest-transformer.cjs"
+    },
+    "transformIgnorePatterns": [],
+    "setupFilesAfterEnv": [
+      "./src/jest-setup.js"
+    ],
+    "testRegex": "\\.test\\.tsx?$",
+    "collectCoverageFrom": [
+      "**/*.{ts,tsx}",
+      "!**/*.d.{ts,tsx}"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ]
+  },
+  "dependencies": {
+    "open": "11.0.0"
+  }
+}

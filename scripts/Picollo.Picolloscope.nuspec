@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Picollo.Picolloscope</id>
+    <version>0.1.28</version>
+    <authors>Victor Baybekov</authors>
+    <description>Picolloscope web assets.</description>
+    <license type="expression">MIT</license>
+    <repository type="git" url="https://github.com/picollodev/picolloscope" />
+    <contentFiles>
+      <files include="any/any/picolloscope/**/*" buildAction="None" />
+    </contentFiles>
+  </metadata>
+  <files>
+    <file src="dist/release/**/*" target="contentFiles/any/any/picolloscope" />
+    <file src="scripts/Picollo.Picolloscope.targets" target="buildTransitive/Picollo.Picolloscope.targets" />
+  </files>
+</package>

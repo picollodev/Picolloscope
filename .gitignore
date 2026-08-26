@@ -1,0 +1,11 @@
+node_modules
+.cache
+dist
+.idea
+coverage
+.vscode
+bin
+obj
+*.md
+!README.md
+!CHANGELOG.md
