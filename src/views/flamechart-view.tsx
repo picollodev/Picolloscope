@@ -10,6 +10,7 @@ import {Sizes, commonStyle} from './style'
 import {FlamechartDetailView} from './flamechart-detail-view'
 import {FlamechartPanZoomView} from './flamechart-pan-zoom-view'
 import {Hovertip} from './hovertip'
+import {noop} from '../lib/utils'
 import {FlamechartViewProps} from './flamechart-view-container'
 import {ProfileSearchContext} from './search-view'
 import {FlamechartSearchView} from './flamechart-search-view'
@@ -109,6 +110,7 @@ export class FlamechartView extends StatelessComponent<FlamechartViewProps> {
                 renderInverted={false}
                 onNodeHover={this.onNodeHover}
                 onNodeSelect={this.onNodeClick}
+                onMiddleClick={noop}
                 selectedNode={this.props.selectedNode}
                 highlightHoveredFrame={this.props.highlightHoveredFrame}
                 transformViewport={this.transformViewport}

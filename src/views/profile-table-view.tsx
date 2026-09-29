@@ -1,4 +1,4 @@
-import {h, JSX, ComponentChild} from 'preact'
+import {h, JSX, ComponentChild, ComponentChildren} from 'preact'
 import {StyleSheet, css} from 'aphrodite'
 import {Profile, ProfileFrame} from '../lib/profile'
 import {formatPercent} from '../lib/utils'
@@ -25,9 +25,26 @@ import {useAtom} from '../lib/atom'
 import {ActiveProfileState} from '../app-state/active-profile-state'
 import {Hovertip} from './hovertip'
 import {Vec2} from '../lib/math'
+import {useProfileTableData} from './profile-table-data'
+
+export function ProfileTableHeader({children}: {children: ComponentChildren}) {
+  const style = getStyle(useTheme())
+  return (
+    <table className={css(style.tableView)}>
+      <thead className={css(style.tableHeader)}>
+        <tr style={{height: Sizes.FRAME_HEIGHT}}>{children}</tr>
+      </thead>
+    </table>
+  )
+}
 
 interface HBarProps {
   perc: number
+}
+
+export function ProfileTotal({profile, weight, total}: {profile: Profile; weight: number; total: number}) {
+  const style = getStyle(useTheme())
+  return <span>{profile.formatValue(weight)} <span className={css(style.percentText)}>{formatPercent(total === 0 ? 0 : 100 * weight / total)}</span></span>
 }
 
 function HBarDisplay(props: HBarProps) {
@@ -61,6 +78,7 @@ function SortIcon(props: SortIconProps) {
 }
 
 interface ProfileTableRowViewProps {
+  totalWeight: number
   frame: ProfileFrame
   matchedRanges: [number, number][] | null
   index: number
@@ -107,6 +125,7 @@ const ProfileTableRowView = ({
   frame,
   matchedRanges,
   profile,
+  totalWeight: denominator,
   index,
   selectedFrame,
   setSelectedFrame,
@@ -119,7 +138,7 @@ const ProfileTableRowView = ({
 
   const totalWeight = frame.totalWeight
   const selfWeight = frame.selfWeight
-  const totalNonIdleWeight = profile.getTotalNonIdleWeight()
+  const totalNonIdleWeight = denominator
   const totalPerc = (100.0 * totalWeight) / totalNonIdleWeight
   const selfPerc = (100.0 * selfWeight) / totalNonIdleWeight
   const totalBasisPointDelta = profile.hasBaseProfile
@@ -142,7 +161,7 @@ const ProfileTableRowView = ({
       className={css(style.tableRow, index % 2 == 0 && style.tableRowEven, selected && style.tableRowSelected)}
     >
       <td className={css(style.numericCell)}>
-        {profile.formatValue(totalWeight)} <span className={css(style.percentText)}>{formatPercent(totalPerc)}</span>
+        <ProfileTotal profile={profile} weight={totalWeight} total={totalNonIdleWeight} />
         <HBarDisplay perc={totalPerc} />
       </td>
       {profile.hasBaseProfile && (
@@ -174,6 +193,8 @@ const ProfileTableRowView = ({
 }
 
 interface ProfileTableViewProps {
+  tableData: ReturnType<typeof useProfileTableData>
+  totalWeight?: number
   profile: Profile
   selectedFrame: ProfileFrame | null
   getCSSColorForFrame: (frame: ProfileFrame) => string
@@ -187,6 +208,8 @@ interface ProfileTableViewProps {
 export const ProfileTableView = memo(
   ({
     profile,
+    tableData,
+    totalWeight = profile.getTotalNonIdleWeight(),
     sortMethod,
     setSortMethod,
     selectedFrame,
@@ -245,23 +268,22 @@ export const ProfileTableView = memo(
       [sortMethod, setSortMethod],
     )
 
-    const sandwichContext = useContext(SandwichViewContext)
 
     const renderItems = useCallback(
       (firstIndex: number, lastIndex: number) => {
-        if (!sandwichContext) return null
 
         const rows: JSX.Element[] = []
 
         for (let i = firstIndex; i <= lastIndex; i++) {
-          const frame = sandwichContext.rowList[i]
-          const match = sandwichContext.getSearchMatchForFrame(frame)
+          const frame = tableData.rowList[i]
+          const match = tableData.getSearchMatchForFrame(frame)
           rows.push(
             ProfileTableRowView({
               frame,
               matchedRanges: match == null ? null : match,
               index: i,
               profile: profile,
+              totalWeight,
               selectedFrame: selectedFrame,
               setSelectedFrame: setSelectedFrame,
               getCSSColorForFrame: getCSSColorForFrame,
@@ -291,7 +313,8 @@ export const ProfileTableView = memo(
         return <table className={css(style.tableView)}>{rows}</table>
       },
       [
-        sandwichContext,
+        tableData,
+        totalWeight,
         profile,
         selectedFrame,
         setSelectedFrame,
@@ -307,8 +330,8 @@ export const ProfileTableView = memo(
     )
 
     const listItems: ListItem[] = useMemo(
-      () => (sandwichContext == null ? [] : sandwichContext.rowList.map(f => ({size: Sizes.FRAME_HEIGHT}))),
-      [sandwichContext],
+      () => tableData.rowList.map(f => ({size: Sizes.FRAME_HEIGHT})),
+      [tableData],
     )
 
     const onTotalClick = useCallback((ev: MouseEvent) => onSortClick(SortField.TOTAL, ev), [onSortClick])
@@ -319,9 +342,7 @@ export const ProfileTableView = memo(
 
     return (
       <div className={css(commonStyle.vbox, style.profileTableView)} ref={container}>
-        <table className={css(style.tableView)}>
-          <thead className={css(style.tableHeader)}>
-            <tr>
+        <ProfileTableHeader>
               <th className={css(style.numericHeader)} onClick={onTotalClick}>
                 <SortIcon activeDirection={sortMethod.field === SortField.TOTAL ? sortMethod.direction : null} />
                 Total
@@ -346,15 +367,13 @@ export const ProfileTableView = memo(
                 <SortIcon activeDirection={sortMethod.field === SortField.SYMBOL_NAME ? sortMethod.direction : null} />
                 Symbol Name
               </th>
-            </tr>
-          </thead>
-        </table>
+        </ProfileTableHeader>
         <ScrollableListView
           axis={'y'}
           items={listItems}
           className={css(style.scrollView)}
           renderItems={renderItems}
-          initialIndexInView={selectedFrame == null ? null : sandwichContext?.getIndexForFrame(selectedFrame)}
+          indexInView={selectedFrame == null ? null : tableData.getIndexForFrame(selectedFrame)}
         />
         {container.current != null && (
           <Hovertip
@@ -369,7 +388,7 @@ export const ProfileTableView = memo(
             }
             frame={hoveredFrame?.frame ?? null}
             formatValue={profile.formatValue.bind(profile)}
-            totalWeight={profile.getTotalNonIdleWeight()}
+            totalWeight={totalWeight}
           />
         )}
       </div>
@@ -510,6 +529,7 @@ interface ProfileTableViewContainerProps {
 }
 
 export const ProfileTableViewContainer = memo((ownProps: ProfileTableViewContainerProps) => {
+  const tableData = useContext(SandwichViewContext)!
   const {activeProfileState} = ownProps
   const {profile, sandwichViewState} = activeProfileState
   if (!profile) throw new Error('profile missing')
@@ -528,6 +548,7 @@ export const ProfileTableViewContainer = memo((ownProps: ProfileTableViewContain
 
   return (
     <ProfileTableView
+      tableData={tableData}
       profile={profile}
       selectedFrame={selectedFrame}
       getCSSColorForFrame={getCSSColorForFrame}

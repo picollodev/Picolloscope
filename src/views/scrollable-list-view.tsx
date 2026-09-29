@@ -19,10 +19,10 @@ interface ScrollableListViewProps {
   axis: 'x' | 'y'
   renderItems: (firstVisibleIndex: number, lastVisibleIndex: number) => JSX.Element | JSX.Element[] | null
   className?: string
-  initialIndexInView?: number | null
+  indexInView?: number | null
 }
 
-export const ScrollableListView = ({items, axis, renderItems, className, initialIndexInView}: ScrollableListViewProps) => {
+export const ScrollableListView = ({items, axis, renderItems, className, indexInView}: ScrollableListViewProps) => {
   const [viewportSize, setViewportSize] = useState<number | null>(null)
   const [viewportScrollOffset, setViewportScrollOffset] = useState<number>(0)
 
@@ -32,19 +32,24 @@ export const ScrollableListView = ({items, axis, renderItems, className, initial
   const leftOrTop = axis === 'x' ? 'left' : 'top'
   const scrollLeftOrScrollTop = axis === 'x' ? 'scrollLeft' : 'scrollTop'
 
-  // This is kind of a weird hack, but I'm not sure what the better of doing something like this is.
-  const offset = initialIndexInView ? items.reduce((a, b, i) => (i < initialIndexInView ? a + b.size : a), 0) : 0
-  const initialScroll = useRef<number | null>(offset)
+  useEffect(() => {
+    const viewport = viewportRef.current
+    if (!viewport || viewportSize == null || indexInView == null) return
+    const start = items.reduce((offset, item, index) => index < indexInView ? offset + item.size : offset, 0)
+    const end = start + items[indexInView].size
+    const scrollOffset = viewport[scrollLeftOrScrollTop]
+    if (start < scrollOffset) {
+      viewport.scrollTo({[leftOrTop]: start})
+    } else if (end > scrollOffset + viewportSize) {
+      viewport.scrollTo({[leftOrTop]: end - viewportSize})
+    }
+  }, [indexInView, items, viewportSize, scrollLeftOrScrollTop, leftOrTop])
 
   const viewportCallback = useCallback(
     (viewport: HTMLDivElement | null) => {
       if (viewport) {
         requestAnimationFrame(() => {
           setViewportSize(viewport.getBoundingClientRect()[widthOrHeight])
-          if (initialScroll.current != null) {
-            viewport.scrollTo({[leftOrTop]: initialScroll.current})
-            initialScroll.current = null
-          }
         })
       } else {
         setViewportSize(null)

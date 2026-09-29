@@ -8,7 +8,7 @@ import {h} from 'preact'
 import {memo} from 'preact/compat'
 import {useTheme} from './themes/theme'
 import {FlamechartID} from '../app-state/profile-group'
-import {flattenRecursionAtom, glCanvasAtom, metadataFormattingAtom} from '../app-state'
+import {flattenRecursionAtom, glCanvasAtom, metadataFormattingAtom, profileGroupAtom} from '../app-state'
 import {useAtom} from '../lib/atom'
 
 const getCalleeProfile = memoizeByShallowEquality<
@@ -75,6 +75,9 @@ export const CalleeFlamegraphView = memo((ownProps: FlamechartViewContainerProps
       canvasContext={canvasContext}
       getCSSColorForFrame={getCSSColorForFrame}
       metadataFormatting={metadataFormatting}
+      onMiddleClick={node => profileGroupAtom.setSelectedFrame(profile.getOrCreateProfileFrame(node.frame.key))}
+      getAllInstancesFrame={frame => profile.getOrCreateProfileFrame(frame.key)}
+      hovertipTotalWeight={profile.getTotalNonIdleWeight()}
       {...useFlamechartSetters(FlamechartID.SANDWICH_CALLEES)}
       {...callerCallee.calleeFlamegraph}
       // This overrides the setSelectedNode specified in useFlamechartSettesr

@@ -594,6 +594,10 @@ export class Profile {
   }
 
   getProfileForCalleesOf(focalFrame: ProfileFrame): Profile {
+    return this.getProfileForSubtrees(focalFrame.groupedNodes)
+  }
+
+  getProfileForSubtrees(roots: readonly CallTreeNode[]): Profile {
 
     const profile = new Profile(this.tid, this.metadata)
     profile.name = this.name;
@@ -614,7 +618,7 @@ export class Profile {
       visit(focalFrameNode)
     }
 
-    for (let node of focalFrame.groupedNodes) {
+    for (let node of roots) {
       recordSubtree(node)
     }
 

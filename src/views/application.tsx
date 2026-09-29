@@ -17,6 +17,7 @@ import { ProfileGroupState } from '../app-state/profile-group'
 import { URLParams } from '../lib/url-params'
 import { StatelessComponent } from '../lib/preact-helpers'
 import { SandwichViewContainer } from './sandwich-view'
+import { CallTreeView } from './call-tree-view'
 import { importProfilesFromFile, importProfilesFromUrl } from '../lib/import'
 import { enableTimelineView } from '../lib/features'
 import { MetadataFormatting } from '../lib/metadata-formatting'
@@ -133,7 +134,7 @@ export class Application extends StatelessComponent<ApplicationProps> {
     this.props.setLoading(true)
     await new Promise(resolve => setTimeout(resolve, 0))
 
-    if (!this.props.glCanvas) return
+    if (!this.props.glCanvas && this.props.viewMode !== ViewMode.CALL_TREE) return
 
     console.time('import')
 
@@ -246,6 +247,8 @@ export class Application extends StatelessComponent<ApplicationProps> {
       this.props.setViewMode(ViewMode.LEFT_HEAVY_FLAME_GRAPH)
     } else if (ev.key === 's') {
       this.props.setViewMode(ViewMode.SANDWICH_VIEW)
+    } else if (ev.key === 'c') {
+      this.props.setViewMode(ViewMode.CALL_TREE)
     } else if (ev.key === 'r') {
       const { flattenRecursion } = this.props
       this.props.setFlattenRecursion(!flattenRecursion)
@@ -423,12 +426,15 @@ export class Application extends StatelessComponent<ApplicationProps> {
       return this.renderLoadingBar()
     }
 
-    if (!activeProfileState || !glCanvas) {
+    if (!activeProfileState) {
       if (this.isEmbedded()) {
         return this.renderError()
       }
       return this.renderLanding()
     }
+
+    if (viewMode === ViewMode.CALL_TREE) return <CallTreeView profile={activeProfileState.profile} />
+    if (!glCanvas) return null
 
     switch (viewMode) {
       case ViewMode.CHRONO_FLAME_CHART: {
@@ -454,7 +460,7 @@ export class Application extends StatelessComponent<ApplicationProps> {
         onDragLeave={this.onDragLeave}
         className={css(style.root, dragActive && style.dragTargetRoot)}
       >
-        <GLCanvas setGLCanvas={this.props.setGLCanvas} canvasContext={this.props.canvasContext} theme={this.props.theme} />
+        {this.props.viewMode !== ViewMode.CALL_TREE && <GLCanvas setGLCanvas={this.props.setGLCanvas} canvasContext={this.props.canvasContext} theme={this.props.theme} />}
         <Toolbar browseForFile={this.browseForFile} {...(this.props as ApplicationProps)} />
         <div className={css(style.contentContainer)}>{this.renderContent()}</div>
         {dragActive && <div className={css(style.dragTarget)} />}

@@ -12,12 +12,14 @@ import {useAtom} from '../lib/atom'
 import {getSourceCodeLink} from '../lib/source-code-links'
 
 const SINGLE_LINE_NAME_MAX_LENGTH = 80
+const HOVER_OPEN_DELAY_MS = 600
 
 interface HovertipProps {
   containerSize: Vec2
   offset: Vec2 | null
   frame: ProfileFrame | null
   node?: CallTreeNode
+  getAllInstancesFrame?: (frame: ProfileFrame) => ProfileFrame
   formatValue: (weight: number) => string
   totalWeight: number
 }
@@ -28,15 +30,10 @@ export function Hovertip(props: HovertipProps) {
   const closeTimeout = useRef<number | null>(null)
   const pointerInside = useRef(false)
   const content = useRef<{frame: ProfileFrame; node?: CallTreeNode; offset: Vec2} | null>(null)
-  const [visible, setVisible] = useState(props.frame != null && props.offset != null)
-
-  if (
-    props.frame != null &&
-    props.offset != null &&
-    (!visible || content.current?.frame !== props.frame || content.current.node !== props.node)
-  ) {
-    content.current = {frame: props.frame, node: props.node, offset: props.offset}
-  }
+  const [visible, setVisible] = useState(false)
+  const latestOffset = useRef(props.offset)
+  latestOffset.current = props.offset
+  const hasTarget = props.frame != null && props.offset != null
 
   const cancelClose = useCallback(() => {
     if (closeTimeout.current != null) {
@@ -46,10 +43,18 @@ export function Hovertip(props: HovertipProps) {
   }, [])
 
   useEffect(() => {
-    if (props.frame != null && props.offset != null) {
+    if (hasTarget) {
       cancelClose()
-      setVisible(true)
-      return
+      setVisible(false)
+      const frame = props.frame!
+      const node = props.node
+      const timeout = window.setTimeout(() => {
+        const offset = latestOffset.current
+        if (offset == null) return
+        content.current = {frame, node, offset}
+        setVisible(true)
+      }, HOVER_OPEN_DELAY_MS)
+      return () => window.clearTimeout(timeout)
     }
 
     if (pointerInside.current) return
@@ -60,12 +65,13 @@ export function Hovertip(props: HovertipProps) {
     }, 100)
 
     return cancelClose
-  }, [props.frame, props.offset, cancelClose])
+  }, [props.frame, props.node, hasTarget, cancelClose])
 
   if (!visible || content.current == null) return null
 
   const {containerSize} = props
   const {frame, node, offset} = content.current
+  const allInstancesFrame = props.getAllInstancesFrame?.(frame) ?? frame
   const containerWidth = containerSize.x
   const containerHeight = containerSize.y
   const sourceCodeLink = getSourceCodeLink(frame, urlParams.sourceLinks)
@@ -152,8 +158,8 @@ export function Hovertip(props: HovertipProps) {
           )}
           <StatisticsRow
             label='All instances:'
-            total={frame.totalWeight}
-            self={frame.selfWeight}
+            total={allInstancesFrame.totalWeight}
+            self={allInstancesFrame.selfWeight}
             grandTotal={props.totalWeight}
             formatValue={props.formatValue}
           />

@@ -26,6 +26,7 @@ const keyboardShortcuts = [
   ...(enableTimelineView ? [{ keys: 'l', action: 'Switch to the Timeline view' }] : []),
   { keys: 'f', action: 'Switch to the Flamegraph view' },
   { keys: 's', action: 'Switch to the Sandwich view' },
+  { keys: 'c', action: 'Switch to the Call tree view' },
   { keys: 'r', action: 'Collapse recursion in the flamegraphs' },
   { keys: 'm', action: 'Cycle method name formatting' },
   { keys: 'n or .', action: 'Go to next profile/thread if one is available' },
@@ -49,6 +50,7 @@ function ToolbarLeftContent(props: ToolbarProps) {
   const setChronoFlameChart = useSetViewMode(viewModeAtom.set, ViewMode.CHRONO_FLAME_CHART)
   const setLeftHeavyFlameGraph = useSetViewMode(viewModeAtom.set, ViewMode.LEFT_HEAVY_FLAME_GRAPH)
   const setSandwichView = useSetViewMode(viewModeAtom.set, ViewMode.SANDWICH_VIEW)
+  const setCallTree = useSetViewMode(viewModeAtom.set, ViewMode.CALL_TREE)
 
   if (!props.activeProfileState) return null
 
@@ -79,6 +81,12 @@ function ToolbarLeftContent(props: ToolbarProps) {
         title='Sandwich view'>
         <span className={css(style.toolbarIcon)}>
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sandwich-icon lucide-sandwich"><path d="m2.37 11.223 8.372-6.777a2 2 0 0 1 2.516 0l8.371 6.777" /><path d="M21 15a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-5.25" /><path d="M3 15a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h9" /><path d="m6.67 15 6.13 4.6a2 2 0 0 0 2.8-.4l3.15-4.2" /><rect width="20" height="4" x="2" y="11" rx="1" /></svg>
+        </span>
+      </div>
+      <div className={css(style.toolbarTab, props.viewMode === ViewMode.CALL_TREE && style.toolbarTabActive)}
+        onClick={setCallTree} title='Call tree' aria-label='Call tree'>
+        <span className={css(style.toolbarIcon)}>
+          <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-list-tree'><path d='M8 5h13'/><path d='M13 12h8'/><path d='M13 19h8'/><path d='M3 10a2 2 0 0 0 2 2h3'/><path d='M3 5v12a2 2 0 0 0 2 2h3'/></svg>
         </span>
       </div>
     </Fragment>

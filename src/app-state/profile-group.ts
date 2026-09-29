@@ -31,6 +31,7 @@ export interface ProfileState {
 }
 
 export type ProfileGroupState = {
+  callTreeViewState?: CallTreeViewState
   name: string
 
   // The index within the list of profiles currently being viewed
@@ -38,6 +39,12 @@ export type ProfileGroupState = {
 
   profiles: ProfileState[]
 } | null
+
+export interface CallTreeViewState {
+  expanded: Set<CallTreeNode>
+  selected: CallTreeNode | null
+  allThreads: boolean
+}
 
 export enum FlamechartID {
   LEFT_HEAVY = 'LEFT_HEAVY',
@@ -54,6 +61,9 @@ let initialFlameChartViewState: FlamechartViewState = {
 }
 
 export class ProfileGroupAtom extends Atom<ProfileGroupState> {
+  setCallTreeViewState = (callTreeViewState: CallTreeViewState) => {
+    if (this.state) this.set({...this.state, callTreeViewState})
+  }
   set(newState: ProfileGroupState) {
     const oldState = this.state
     if (oldState != null && newState != null && objectsHaveShallowEquality(oldState, newState)) {

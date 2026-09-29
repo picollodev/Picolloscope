@@ -50,6 +50,7 @@ export interface FlamechartPanZoomViewProps {
 
   onNodeHover: (hover: {node: CallTreeNode; event: MouseEvent} | null) => void
   onNodeSelect: (node: CallTreeNode | null) => void
+  onMiddleClick: (node: CallTreeNode) => void
 
   configSpaceViewportRect: Rect
   transformViewport: (transform: AffineTransform) => void
@@ -535,6 +536,11 @@ export class FlamechartPanZoomView extends Component<FlamechartPanZoomViewProps,
   private mouseDownPos: Vec2 | null = null
   private currentMousePos: Vec2 | null = null
   private onMouseDown = (ev: MouseEvent) => {
+    if (ev.button === 1) {
+      ev.preventDefault()
+      this.mouseDownPos = new Vec2(ev.offsetX, ev.offsetY)
+      return
+    }
     this.mouseDownPos = this.lastDragPos = new Vec2(ev.offsetX, ev.offsetY)
     this.updateCursor()
     window.addEventListener('mouseup', this.onWindowMouseUp)
@@ -551,6 +557,15 @@ export class FlamechartPanZoomView extends Component<FlamechartPanZoomViewProps,
     if (this.hoveredLabel) {
       this.props.onNodeHover(null)
     }
+  }
+
+  private onAuxClick = (ev: MouseEvent) => {
+    if (ev.button !== 1) return
+    ev.preventDefault()
+    const mouseDownPos = this.mouseDownPos
+    this.mouseDownPos = null
+    if (!mouseDownPos || new Vec2(ev.offsetX, ev.offsetY).minus(mouseDownPos).length() > 5) return
+    if (this.hoveredLabel) this.props.onMiddleClick(this.hoveredLabel.node)
   }
 
   private onDblClick = (ev: MouseEvent) => {
@@ -828,6 +843,7 @@ export class FlamechartPanZoomView extends Component<FlamechartPanZoomViewProps,
         onMouseMove={this.onMouseMove}
         onMouseLeave={this.onMouseLeave}
         onClick={this.onClick}
+        onAuxClick={this.onAuxClick}
         onDblClick={this.onDblClick}
         onWheel={this.onWheel}
         ref={this.containerRef}

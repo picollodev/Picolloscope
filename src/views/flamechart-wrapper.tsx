@@ -1,4 +1,4 @@
-import {CallTreeNode} from '../lib/profile'
+import {CallTreeNode, ProfileFrame} from '../lib/profile'
 import {css} from 'aphrodite'
 import {h} from 'preact'
 import {commonStyle} from './style'
@@ -9,7 +9,13 @@ import {Hovertip} from './hovertip'
 import {FlamechartViewProps} from './flamechart-view-container'
 import {StatelessComponent} from '../lib/preact-helpers'
 
-export class FlamechartWrapper extends StatelessComponent<FlamechartViewProps> {
+type FlamechartWrapperProps = FlamechartViewProps & {
+  onMiddleClick: (node: CallTreeNode) => void
+  getAllInstancesFrame?: (frame: ProfileFrame) => ProfileFrame
+  hovertipTotalWeight?: number
+}
+
+export class FlamechartWrapper extends StatelessComponent<FlamechartWrapperProps> {
   private clampViewportToFlamegraph(viewportRect: Rect) {
     const {flamechart, renderInverted} = this.props
     return flamechart.getClampedConfigSpaceViewportRect({
@@ -39,8 +45,9 @@ export class FlamechartWrapper extends StatelessComponent<FlamechartViewProps> {
         offset={offset}
         frame={hover?.node.frame ?? null}
         node={hover?.node}
+        getAllInstancesFrame={this.props.getAllInstancesFrame}
         formatValue={this.props.flamechart.formatValue.bind(this.props.flamechart)}
-        totalWeight={this.props.flamechart.getTotalWeight()}
+        totalWeight={this.props.hovertipTotalWeight ?? this.props.flamechart.getTotalWeight()}
       />
     )
   }
@@ -66,6 +73,7 @@ export class FlamechartWrapper extends StatelessComponent<FlamechartViewProps> {
           highlightHoveredFrame={true}
           onNodeHover={this.setNodeHover}
           onNodeSelect={noop}
+          onMiddleClick={this.props.onMiddleClick}
           configSpaceViewportRect={this.props.configSpaceViewportRect}
           setConfigSpaceViewportRect={this.setConfigSpaceViewportRect}
           transformViewport={this.transformViewport}
